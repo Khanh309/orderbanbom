@@ -22,7 +22,7 @@ class TtsService {
           await _flutterTts!.setLanguage("vi");
         } catch (_) {}
       }
-      await _flutterTts!.setSpeechRate(0.55); // natural speed
+      await _flutterTts!.setSpeechRate(0.58); // tốc độ dứt khoát, gọn gàng
       await _flutterTts!.setVolume(1.0);
       await _flutterTts!.setPitch(1.0);
       _isInitialized = true;
@@ -42,29 +42,64 @@ class TtsService {
     }
   }
 
-  /// Exact voice prompt: announce recording start with platform name and order code
+  /// Chuyển đổi mã vận đơn thành từng chữ số/ký tự rời rạc bằng tiếng Việt
+  /// Ví dụ: "87214345" -> "tám bảy hai một bốn ba bốn năm"
+  /// Tránh việc máy đọc thành "tám mươi bảy triệu..." hay "tám tỉ..."
+  static String formatOrderCodeForSpeech(String code) {
+    if (code.isEmpty) return '';
+
+    // Làm sạch các dấu gạch ngang, khoảng trắng, dấu chấm
+    String clean = code.trim().replaceAll(RegExp(r'[\-_.\s/]'), '');
+
+    // Nếu mã quá dài (hơn 10 ký tự), lấy 8 ký tự cuối để đọc ngắn gọn, nhanh nhất cho thợ đóng hàng
+    if (clean.length > 10) {
+      clean = clean.substring(clean.length - 8);
+    }
+
+    final Map<String, String> digitMap = {
+      '0': 'không',
+      '1': 'một',
+      '2': 'hai',
+      '3': 'ba',
+      '4': 'bốn',
+      '5': 'năm',
+      '6': 'sáu',
+      '7': 'bảy',
+      '8': 'tám',
+      '9': 'chín',
+    };
+
+    final List<String> spokenWords = [];
+    for (int i = 0; i < clean.length; i++) {
+      final char = clean[i].toUpperCase();
+      if (digitMap.containsKey(char)) {
+        spokenWords.add(digitMap[char]!);
+      } else {
+        spokenWords.add(char);
+      }
+    }
+
+    return spokenWords.join(' ');
+  }
+
+  /// Đọc thông báo bắt đầu quay: đọc từng số một gọn gàng
   Future<void> speakStartRecording({String? orderCode, String? platformName}) async {
     if (orderCode != null && orderCode.isNotEmpty) {
-      if (platformName != null && platformName.isNotEmpty) {
-        await speak("Bắt đầu quay video đơn $platformName, mã $orderCode");
-      } else {
-        await speak("Bắt đầu quay video mã đơn $orderCode");
-      }
+      final spokenDigits = formatOrderCodeForSpeech(orderCode);
+      await speak("Bắt đầu quay mã $spokenDigits");
     } else {
-      await speak("Bắt đầu quay video");
+      await speak("Bắt đầu quay");
     }
   }
 
+  /// Khi đổi đơn liên tục trong ca đóng hàng
   Future<void> speakOrderSwitched({required String previousOrder, required String newOrder, String? newPlatformName}) async {
-    if (newPlatformName != null && newPlatformName.isNotEmpty) {
-      await speak("Đã lưu đơn trước. Bắt đầu quay video đơn $newPlatformName $newOrder");
-    } else {
-      await speak("Đã lưu đơn trước. Bắt đầu quay video đơn mới $newOrder");
-    }
+    final spokenDigits = formatOrderCodeForSpeech(newOrder);
+    await speak("Đổi đơn, quay mã $spokenDigits");
   }
 
   Future<void> speakStopped() async {
-    await speak("Đã dừng và lưu video");
+    await speak("Đã lưu video");
   }
 
   Future<void> stop() async {
