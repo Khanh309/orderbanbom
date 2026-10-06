@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:gal/gal.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +9,26 @@ class StorageService {
   static final StorageService _instance = StorageService._internal();
   factory StorageService() => _instance;
   StorageService._internal();
+
+  /// Tự động đồng bộ và lưu video vào Bộ sưu tập / Thư viện ảnh (Gallery) của máy trong album "OrderBanBom"
+  Future<bool> saveToGallery(String videoPath) async {
+    try {
+      final file = File(videoPath);
+      if (!await file.exists()) return false;
+
+      final hasAccess = await Gal.hasAccess();
+      if (!hasAccess) {
+        await Gal.requestAccess();
+      }
+
+      await Gal.putVideo(videoPath, album: 'OrderBanBom');
+      debugPrint('Successfully saved video to phone Gallery album OrderBanBom: $videoPath');
+      return true;
+    } catch (e) {
+      debugPrint('Error saving video to phone Gallery: $e');
+      return false;
+    }
+  }
 
   Future<Directory> getVideoDirectory() async {
     final appDir = await getApplicationDocumentsDirectory();

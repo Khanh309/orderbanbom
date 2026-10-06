@@ -339,6 +339,9 @@ class RecorderProvider with ChangeNotifier {
       await _dbService.insertOrder(newRecord);
       await _ttsService.speakStopped();
 
+      // Tự động lưu video vào Bộ sưu tập / Thư viện ảnh của máy trong album OrderBanBom
+      _storageService.saveToGallery(destinationPath);
+
       _state = RecorderState.standby;
       _currentOrderCode = '';
       _recordingDuration = 0;
@@ -394,6 +397,8 @@ class RecorderProvider with ChangeNotifier {
       );
 
       await _dbService.insertOrder(oldRecord);
+      // Tự động lưu video vào Bộ sưu tập / Thư viện ảnh của máy trong album OrderBanBom
+      _storageService.saveToGallery(destinationPath);
 
       // Announce and start new order
       _currentOrderCode = nextOrderCode;

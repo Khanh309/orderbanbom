@@ -5,6 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:video_player/video_player.dart';
 import '../models/order_record.dart';
 import '../providers/order_provider.dart';
+import '../services/storage_service.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
   final OrderRecord order;
@@ -79,6 +80,35 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         const SnackBar(content: Text('Không tìm thấy file video để chia sẻ.')),
       );
     }
+  }
+
+  Future<void> _saveToGallery() async {
+    final success = await StorageService().saveToGallery(widget.order.videoPath);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            Icon(
+              success ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                success
+                    ? 'Đã lưu video vào Bộ sưu tập (Album OrderBanBom)!'
+                    : 'Không tìm thấy video hoặc chưa cấp quyền truy cập ảnh.',
+                style: const TextStyle(fontSize: 13),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: success ? const Color(0xFF00E676) : Colors.redAccent,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   Future<void> _saveNote() async {
@@ -372,6 +402,24 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                       onPressed: _shareVideo,
                       icon: const Icon(Icons.share_rounded, size: 22),
                       label: const Text('Chia Sẻ Video Ngay'),
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  // Save to Gallery button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 46,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: textTitleColor,
+                        side: BorderSide(color: cardBorder),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      onPressed: _saveToGallery,
+                      icon: const Icon(Icons.photo_library_outlined, size: 20),
+                      label: const Text('Lưu vào Bộ sưu tập (Gallery)'),
                     ),
                   ),
                 ],

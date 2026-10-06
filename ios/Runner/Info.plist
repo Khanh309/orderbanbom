@@ -30,6 +30,8 @@
 	<string>Ứng dụng cần quyền Microphone để thu âm thanh khi quay video đóng gói đơn hàng.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Ứng dụng cần quyền truy cập thư viện để lưu trữ và chia sẻ video bằng chứng đóng gói.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Ứng dụng cần quyền lưu video đóng gói vào Thư viện ảnh (Bộ sưu tập) trong album OrderBanBom.</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
