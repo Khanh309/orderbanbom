@@ -93,7 +93,7 @@ class RecorderProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  bool _only1DBarcodes = true; // Chuyên quét dải mã vạch vận đơn 1D (Code 128, Code 39)
+  bool _only1DBarcodes = false; // Mặc định quét cả mã vạch 1D và mã QR
 
   bool get only1DBarcodes => _only1DBarcodes;
 
@@ -106,7 +106,7 @@ class RecorderProvider with ChangeNotifier {
   void _initBarcodeScanner() {
     _barcodeScanner?.close();
     if (_only1DBarcodes) {
-      // Chỉ nhận diện các chuẩn mã vạch vận đơn sàn (bỏ qua mã QR phụ, mã bưu cục)
+      // Chỉ nhận diện các chuẩn mã vạch vận đơn 1D
       _barcodeScanner = BarcodeScanner(formats: [
         BarcodeFormat.code128,
         BarcodeFormat.code39,
@@ -116,15 +116,9 @@ class RecorderProvider with ChangeNotifier {
         BarcodeFormat.upce,
       ]);
     } else {
+      // Mặc định: Quét tất cả các định dạng mã vận đơn 1D và mã QR
       _barcodeScanner = BarcodeScanner(formats: [
-        BarcodeFormat.code128,
-        BarcodeFormat.code39,
-        BarcodeFormat.qrCode,
-        BarcodeFormat.ean13,
-        BarcodeFormat.ean8,
-        BarcodeFormat.dataMatrix,
-        BarcodeFormat.upca,
-        BarcodeFormat.upce,
+        BarcodeFormat.all,
       ]);
     }
   }
@@ -238,7 +232,8 @@ class RecorderProvider with ChangeNotifier {
   Future<void> handleScannedBarcode(String code) async {
     final cleanCode = code.trim();
     if (cleanCode.isEmpty) return;
-    HapticFeedback.mediumImpact();
+    HapticFeedback.heavyImpact();
+    SystemSound.play(SystemSoundType.click);
 
     if (_state == RecorderState.standby) {
       // Determine platform
@@ -269,8 +264,12 @@ class RecorderProvider with ChangeNotifier {
     // 1. Stop scanning stream first to release camera pipeline
     await _stopScanningStream();
 
-    // 2. TTS Voice announcement: "Bắt đầu quay video đơn Shopee [mã]"
-    await _ttsService.speakStartRecording(
+    // 2. Play immediate sound and vibration
+    HapticFeedback.heavyImpact();
+    SystemSound.play(SystemSoundType.click);
+
+    // 3. TTS Voice announcement in background (non-blocking)
+    _ttsService.speakStartRecording(
       orderCode: orderCode,
       platformName: activePlatformLabel,
     );

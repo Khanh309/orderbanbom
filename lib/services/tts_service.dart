@@ -14,7 +14,14 @@ class TtsService {
     if (_isInitialized) return;
     try {
       _flutterTts = FlutterTts();
-      await _flutterTts!.setLanguage("vi-VN");
+      await _flutterTts!.awaitSpeakCompletion(false);
+      try {
+        await _flutterTts!.setLanguage("vi-VN");
+      } catch (_) {
+        try {
+          await _flutterTts!.setLanguage("vi");
+        } catch (_) {}
+      }
       await _flutterTts!.setSpeechRate(0.55); // natural speed
       await _flutterTts!.setVolume(1.0);
       await _flutterTts!.setPitch(1.0);
